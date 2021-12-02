@@ -24,5 +24,5 @@ pub fn main() anyerror!void {
     const time = timer.read();
     std.debug.warn("Part 1: {} increases\n", .{p1});
     std.debug.warn("Part 2: {} increases\n", .{p2});
-    std.debug.warn("Total runtime (without output): {}us", .{@divFloor(time, std.time.ns_per_us)});
+    std.debug.warn("Runtime (excluding output): {}us", .{@divFloor(time, std.time.ns_per_us)});
 }
