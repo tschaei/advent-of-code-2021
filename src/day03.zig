@@ -19,11 +19,8 @@ pub fn main() anyerror!void {
     while (lines.next()) |line| {
         lineCount += 1;
         try numbers.append(try std.fmt.parseInt(usize, line, 2));
-        for (line) |bit, idx| {
-            // TODO: make branchless (add binary & of shifted bit)
-            if (bit == '1') {
-                oneCounts[idx] += 1;
-            }
+        for (line) |_, idx| {
+            oneCounts[idx] += (numbers.items[numbers.items.len - 1] >> @truncate(u6, bits - 1 - idx)) & 1;
         }
     }
 
@@ -45,15 +42,16 @@ pub fn main() anyerror!void {
 
     var oxygenGeneratorRatingCandidates1 = std.ArrayList(usize).init(&gpa.allocator);
     defer oxygenGeneratorRatingCandidates1.deinit();
-    var oxygenGeneratorRatingCandidates2 = std.ArrayList(usize).init(&gpa.allocator);
-    defer oxygenGeneratorRatingCandidates2.deinit();
     try oxygenGeneratorRatingCandidates1.insertSlice(0, numbers.items);
+    var oxygenGeneratorRatingCandidates2 = try std.ArrayList(usize).initCapacity(&gpa.allocator, oxygenGeneratorRatingCandidates1.items.len);
+    defer oxygenGeneratorRatingCandidates2.deinit();
 
     var co2ScrubberRatingCandidates1 = std.ArrayList(usize).init(&gpa.allocator);
     defer co2ScrubberRatingCandidates1.deinit();
-    var co2ScrubberRatingCandidates2 = std.ArrayList(usize).init(&gpa.allocator);
-    defer co2ScrubberRatingCandidates2.deinit();
     try co2ScrubberRatingCandidates1.insertSlice(0, numbers.items);
+    var co2ScrubberRatingCandidates2 = try std.ArrayList(usize).initCapacity(&gpa.allocator, co2ScrubberRatingCandidates1.items.len);
+    defer co2ScrubberRatingCandidates2.deinit();
+
     lines.reset();
 
     var i: usize = 1;
@@ -78,9 +76,8 @@ pub fn main() anyerror!void {
                     try oxygenGeneratorRatingCandidates2.append(candidate);
                 }
             }
-            oxygenGeneratorRatingCandidates1.clearAndFree();
-            try oxygenGeneratorRatingCandidates1.insertSlice(0, oxygenGeneratorRatingCandidates2.items);
-            oxygenGeneratorRatingCandidates2.clearAndFree();
+            std.mem.swap(std.ArrayList(usize), &oxygenGeneratorRatingCandidates1, &oxygenGeneratorRatingCandidates2);
+            oxygenGeneratorRatingCandidates2.clearRetainingCapacity();
         }
 
         if (co2ScrubberRatingCandidates1.items.len > 1) {
@@ -100,9 +97,8 @@ pub fn main() anyerror!void {
                     try co2ScrubberRatingCandidates2.append(candidate);
                 }
             }
-            co2ScrubberRatingCandidates1.clearAndFree();
-            try co2ScrubberRatingCandidates1.insertSlice(0, co2ScrubberRatingCandidates2.items);
-            co2ScrubberRatingCandidates2.clearAndFree();
+            std.mem.swap(std.ArrayList(usize), &co2ScrubberRatingCandidates1, &co2ScrubberRatingCandidates2);
+            co2ScrubberRatingCandidates2.clearRetainingCapacity();
         }
         i += 1;
     }
