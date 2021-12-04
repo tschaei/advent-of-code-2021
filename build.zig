@@ -5,6 +5,7 @@ pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
     makeBuildForDay(b, target, mode, "01");
     makeBuildForDay(b, target, mode, "02");
+    makeBuildForDay(b, target, mode, "03");
 }
 
 pub fn makeBuildForDay(b: *std.build.Builder, target: std.build.Target, mode: std.builtin.Mode, day: []const u8) void {
