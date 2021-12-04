@@ -6,6 +6,7 @@ pub fn build(b: *std.build.Builder) void {
     makeBuildForDay(b, target, mode, "01");
     makeBuildForDay(b, target, mode, "02");
     makeBuildForDay(b, target, mode, "03");
+    makeBuildForDay(b, target, mode, "04");
 }
 
 pub fn makeBuildForDay(b: *std.build.Builder, target: std.build.Target, mode: std.builtin.Mode, day: []const u8) void {
