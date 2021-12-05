@@ -71,14 +71,16 @@ pub fn parseLineSegments(allocator: *std.mem.Allocator, inputBuf: []const u8) !P
     while (lines.next()) |line| {
         var points = std.mem.split(u8, line, " -> ");
         var point1 = std.mem.tokenize(u8, points.next() orelse return error.ParseError, ",");
-        var x1 = try std.fmt.parseInt(usize, point1.next() orelse return error.ParseError, 10);
-        var y1 = try std.fmt.parseInt(usize, point1.next() orelse return error.ParseError, 10);
         var point2 = std.mem.tokenize(u8, points.next() orelse return error.ParseError, ",");
-        var x2 = try std.fmt.parseInt(usize, point2.next() orelse return error.ParseError, 10);
-        var y2 = try std.fmt.parseInt(usize, point2.next() orelse return error.ParseError, 10);
-        xMax = std.math.max(xMax, std.math.max(x1, x2));
-        yMax = std.math.max(yMax, std.math.max(y1, y2));
-        try lineSegments.append(.{ .x1 = x1, .y1 = y1, .x2 = x2, .y2 = y2 });
+        const segment = .{
+            .x1 = try std.fmt.parseInt(usize, point1.next() orelse return error.ParseError, 10),
+            .y1 = try std.fmt.parseInt(usize, point1.next() orelse return error.ParseError, 10),
+            .x2 = try std.fmt.parseInt(usize, point2.next() orelse return error.ParseError, 10),
+            .y2 = try std.fmt.parseInt(usize, point2.next() orelse return error.ParseError, 10),
+        };
+        try lineSegments.append(segment);
+        xMax = std.math.max(xMax, std.math.max(segment.x1, segment.x2));
+        yMax = std.math.max(yMax, std.math.max(segment.y1, segment.y2));
     }
 
     return ParsedLineSegments{
