@@ -9,22 +9,30 @@ pub fn main() anyerror!void {
     defer _ = gpa.deinit();
     var positions = std.ArrayList(i64).init(&gpa.allocator);
     defer positions.deinit();
+
+    var current: i64 = std.math.maxInt(i64);
+    var end: i64 = 0;
     while (positionsIter.next()) |pos| {
-        try positions.append(try std.fmt.parseInt(i64, pos, 10));
+        const num = try std.fmt.parseInt(i64, pos, 10);
+        try positions.append(num);
+        if (num < current) {
+            current = num;
+        } else if (num > end) {
+            end = num;
+        }
     }
 
-    var i: i64 = 0;
     var p1: i64 = std.math.maxInt(i64);
     var p2: i64 = std.math.maxInt(i64);
-    while (i < positions.items.len) : (i += 1) {
+    while (current <= end) : (current += 1) {
         var fuelP1: i64 = 0;
         var fuelP2: i64 = 0;
         for (positions.items) |pos| {
-            const delta = try std.math.absInt(std.math.max(pos, i) - std.math.min(pos, i));
-            fuelP1 += delta; 
+            const delta = try std.math.absInt(std.math.max(pos, current) - std.math.min(pos, current));
+            fuelP1 += delta;
             fuelP2 += @divFloor(delta * (delta + 1), 2);
         }
-        
+
         if (p1 > fuelP1) {
             p1 = fuelP1;
         }
@@ -32,7 +40,7 @@ pub fn main() anyerror!void {
             p2 = fuelP2;
         }
     }
-    
+
     const time = timer.read();
     std.debug.print("Part1: {}\n", .{p1});
     std.debug.print("Part2: {}\n", .{p2});
