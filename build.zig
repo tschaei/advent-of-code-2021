@@ -14,7 +14,7 @@ pub fn build(b: *std.build.Builder) void {
     makeBuildForDay(b, target, mode, "09");
 }
 
-pub fn makeBuildForDay(b: *std.build.Builder, target: std.build.Target, mode: std.builtin.Mode, day: []const u8) void {
+pub fn makeBuildForDay(b: *std.build.Builder, target: std.zig.CrossTarget, mode: std.builtin.Mode, day: []const u8) void {
     var step_name = [_]u8{undefined} ** 5;
     _ = std.fmt.bufPrint(&step_name, "day{s}", .{day}) catch unreachable;
     var step_src = [_]u8{undefined} ** 13;

@@ -21,12 +21,12 @@ const GridField = struct {
 };
 
 const Grid = struct {
-    allocator: *std.mem.Allocator,
+    allocator: std.mem.Allocator,
     fields: [][]GridField,
     p1: usize,
     p2: usize,
 
-    pub fn init(allocator: *std.mem.Allocator, xMax: usize, yMax: usize) !Grid {
+    pub fn init(allocator: std.mem.Allocator, xMax: usize, yMax: usize) !Grid {
         var fields = try allocator.alloc([]GridField, yMax + 1);
         for (fields) |*row| {
             row.* = try allocator.alloc(GridField, xMax + 1);
@@ -39,13 +39,6 @@ const Grid = struct {
             .p1 = 0,
             .p2 = 0,
         };
-    }
-
-    pub fn deinit(self: *Grid) void {
-        for (self.fields) |*row| {
-            self.allocator.free(row.*);
-        }
-        self.allocator.free(self.fields);
     }
 
     pub fn mark(self: *Grid, x: usize, y: usize, p1: bool) void {
@@ -62,10 +55,9 @@ const Grid = struct {
     }
 };
 
-pub fn parseLineSegments(allocator: *std.mem.Allocator, inputBuf: []const u8) !ParsedLineSegments {
+pub fn parseLineSegments(allocator: std.mem.Allocator, inputBuf: []const u8) !ParsedLineSegments {
     var lines = std.mem.tokenize(u8, inputBuf, "\r\n");
     var lineSegments = std.ArrayList(LineSegment).init(allocator);
-    errdefer lineSegments.deinit();
     var xMax: usize = 0;
     var yMax: usize = 0;
     while (lines.next()) |line| {
@@ -92,15 +84,14 @@ pub fn parseLineSegments(allocator: *std.mem.Allocator, inputBuf: []const u8) !P
 
 pub fn main() anyerror!void {
     const timer = try std.time.Timer.start();
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    var parsedLineSegments = try parseLineSegments(&gpa.allocator, input);
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    var parsedLineSegments = try parseLineSegments(allocator, input);
     const lineSegments = parsedLineSegments.lineSegments;
     const xMax = parsedLineSegments.xMax;
     const yMax = parsedLineSegments.yMax;
-    defer gpa.allocator.free(lineSegments);
-    var grid = try Grid.init(&gpa.allocator, xMax, yMax);
-    defer grid.deinit();
+    var grid = try Grid.init(allocator, xMax, yMax);
 
     for (lineSegments) |segment| {
         if (segment.x1 == segment.x2) {

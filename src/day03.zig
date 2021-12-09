@@ -4,17 +4,16 @@ const input = @embedFile("day03.input");
 
 pub fn main() anyerror!void {
     const timer = try std.time.Timer.start();
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    const allocator = arena.allocator();
+    defer arena.deinit();
     var lines = std.mem.tokenize(u8, input, "\r\n");
     var bits = (lines.next() orelse return).len;
     lines.reset();
     var lineCount: usize = 0;
-    var oneCounts = try gpa.allocator.alloc(usize, bits);
-    defer gpa.allocator.free(oneCounts);
+    var oneCounts = try allocator.alloc(usize, bits);
     std.mem.set(usize, oneCounts, 0);
-    var numbers = std.ArrayList(usize).init(&gpa.allocator);
-    defer numbers.deinit();
+    var numbers = std.ArrayList(usize).init(allocator);
 
     while (lines.next()) |line| {
         lineCount += 1;
@@ -24,8 +23,7 @@ pub fn main() anyerror!void {
         }
     }
 
-    var gammaRate = try gpa.allocator.alloc(u8, bits);
-    defer gpa.allocator.free(gammaRate);
+    var gammaRate = try allocator.alloc(u8, bits);
     std.mem.set(u8, gammaRate, '0');
     for (oneCounts) |oneCount, idx| {
         if (oneCount > @divFloor(lineCount, 2)) {
@@ -33,24 +31,19 @@ pub fn main() anyerror!void {
         }
     }
 
-    var epsilonRate = try gpa.allocator.dupe(u8, gammaRate);
-    defer gpa.allocator.free(epsilonRate);
+    var epsilonRate = try allocator.dupe(u8, gammaRate);
     for (epsilonRate) |bit, idx| {
         epsilonRate[idx] = if (bit == '1') '0' else '1';
     }
     const p1 = (try std.fmt.parseInt(usize, gammaRate, 2)) * (try std.fmt.parseInt(usize, epsilonRate, 2));
 
-    var oxygenGeneratorRatingCandidates1 = std.ArrayList(usize).init(&gpa.allocator);
-    defer oxygenGeneratorRatingCandidates1.deinit();
+    var oxygenGeneratorRatingCandidates1 = std.ArrayList(usize).init(allocator);
     try oxygenGeneratorRatingCandidates1.insertSlice(0, numbers.items);
-    var oxygenGeneratorRatingCandidates2 = try std.ArrayList(usize).initCapacity(&gpa.allocator, oxygenGeneratorRatingCandidates1.items.len);
-    defer oxygenGeneratorRatingCandidates2.deinit();
+    var oxygenGeneratorRatingCandidates2 = try std.ArrayList(usize).initCapacity(allocator, oxygenGeneratorRatingCandidates1.items.len);
 
-    var co2ScrubberRatingCandidates1 = std.ArrayList(usize).init(&gpa.allocator);
-    defer co2ScrubberRatingCandidates1.deinit();
+    var co2ScrubberRatingCandidates1 = std.ArrayList(usize).init(allocator);
     try co2ScrubberRatingCandidates1.insertSlice(0, numbers.items);
-    var co2ScrubberRatingCandidates2 = try std.ArrayList(usize).initCapacity(&gpa.allocator, co2ScrubberRatingCandidates1.items.len);
-    defer co2ScrubberRatingCandidates2.deinit();
+    var co2ScrubberRatingCandidates2 = try std.ArrayList(usize).initCapacity(allocator, co2ScrubberRatingCandidates1.items.len);
 
     lines.reset();
 

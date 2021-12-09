@@ -18,10 +18,9 @@ pub fn main() anyerror!void {
     var lines = std.mem.tokenize(u8, input, "\r\n");
     var p1: usize = 0;
     var p2: usize = 0;
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    var arena = std.heap.ArenaAllocator.init(&gpa.allocator);
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
+    const allocator = arena.allocator();
 
     while (lines.next()) |line| {
         var lineIter = std.mem.split(u8, line, " | ");
@@ -31,7 +30,7 @@ pub fn main() anyerror!void {
         var signalOccurences = [_]u8{0} ** 7;
         var inputIdx: usize = 0;
         while (lineInput.next()) |digit| : (inputIdx += 1) {
-            inputs[inputIdx] = try arena.allocator.alloc(u8, digit.len);
+            inputs[inputIdx] = try allocator.alloc(u8, digit.len);
             std.mem.copy(u8, inputs[inputIdx], digit);
             for (digit) |signal| {
                 signalOccurences[signal - 'a'] += 1;
@@ -98,7 +97,7 @@ pub fn main() anyerror!void {
         var decimalPlace: usize = 3;
         var num: usize = 0;
         while (output.next()) |outputDigit| : (decimalPlace -= 1) {
-            var digit = try arena.allocator.alloc(u8, outputDigit.len);
+            var digit = try allocator.alloc(u8, outputDigit.len);
             std.mem.copy(u8, digit, outputDigit);
             if (digit.len == 2) {
                 num += 1 * std.math.pow(usize, 10, decimalPlace);

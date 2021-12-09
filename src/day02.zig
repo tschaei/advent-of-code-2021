@@ -27,7 +27,7 @@ pub fn main() anyerror!void {
     }
 
     const elapsed_time = timer.read();
-    std.debug.warn("Part 1: depth: {}, horizontal: {}. Solution: {}\n", .{ depth_p1, horizontal, depth_p1 * horizontal });
-    std.debug.warn("Part 2: depth: {}, aim: {}. Solution: {}\n", .{ depth_p2, aim, depth_p2 * horizontal });
-    std.debug.warn("Runtime (excluding output): {}us\n", .{elapsed_time / std.time.ns_per_us});
+    std.debug.print("Part 1: depth: {}, horizontal: {}. Solution: {}\n", .{ depth_p1, horizontal, depth_p1 * horizontal });
+    std.debug.print("Part 2: depth: {}, aim: {}. Solution: {}\n", .{ depth_p2, aim, depth_p2 * horizontal });
+    std.debug.print("Runtime (excluding output): {}us\n", .{elapsed_time / std.time.ns_per_us});
 }

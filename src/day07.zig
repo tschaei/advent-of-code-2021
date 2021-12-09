@@ -5,10 +5,10 @@ const input = @embedFile("day07.input");
 pub fn main() anyerror!void {
     const timer = try std.time.Timer.start();
     var positionsIter = std.mem.split(u8, input, ",");
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    var positions = std.ArrayList(i64).init(&gpa.allocator);
-    defer positions.deinit();
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var allocator = arena.allocator();
+    defer arena.deinit();
+    var positions = std.ArrayList(i64).init(allocator);
 
     var current: i64 = std.math.maxInt(i64);
     var end: i64 = 0;

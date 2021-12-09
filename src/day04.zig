@@ -69,14 +69,13 @@ pub fn main() anyerror!void {
     const timer = try std.time.Timer.start();
     var p1: ?usize = null;
     var p2: ?usize = null;
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    const allocator = arena.allocator();
+    defer arena.deinit();
     var lines = std.mem.split(u8, input, "\n");
     var draws = std.mem.tokenize(u8, lines.next() orelse return, ",");
-    var boards = try parseBoards(&gpa.allocator, &lines);
-    defer boards.deinit();
-    var boardsForNextDraw = try std.ArrayList(Board).initCapacity(&gpa.allocator, boards.items.len);
-    defer boardsForNextDraw.deinit();
+    var boards = try parseBoards(allocator, &lines);
+    var boardsForNextDraw = try std.ArrayList(Board).initCapacity(allocator, boards.items.len);
 
     while (draws.next()) |draw| {
         for (boards.items) |*board| {
@@ -102,7 +101,7 @@ pub fn main() anyerror!void {
     std.debug.print("Runtime (excluding output): {}us\n", .{end / std.time.ns_per_us});
 }
 
-fn parseBoards(allocator: *std.mem.Allocator, lines: *std.mem.SplitIterator(u8)) !std.ArrayList(Board) {
+fn parseBoards(allocator: std.mem.Allocator, lines: *std.mem.SplitIterator(u8)) !std.ArrayList(Board) {
     var currentBoard = Board.init([_][5]usize{[_]usize{0} ** 5} ** 5);
     var currentLine: usize = 0;
     var boards = std.ArrayList(Board).init(allocator);

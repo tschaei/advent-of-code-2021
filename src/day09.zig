@@ -58,20 +58,19 @@ pub fn exploreBasin(at: Point, basin: *Basin, map: [][]u8) anyerror!usize {
 
 pub fn main() anyerror!void {
     const timer = try std.time.Timer.start();
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    var arena = std.heap.ArenaAllocator.init(&gpa.allocator);
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
-    var map = std.ArrayList([]u8).init(&arena.allocator);
+    const allocator = arena.allocator();
+    var map = std.ArrayList([]u8).init(allocator);
     var lines = std.mem.tokenize(u8, input, "\r\n");
     while (lines.next()) |line| {
-        var row = std.ArrayList(u8).init(&arena.allocator);
+        var row = std.ArrayList(u8).init(allocator);
         for (line) |char| {
             try row.append(try std.fmt.parseInt(u8, &.{char}, 10));
         }
         try map.append(row.toOwnedSlice());
     }
-    var lowPoints = std.ArrayList(LowPoint).init(&arena.allocator);
+    var lowPoints = std.ArrayList(LowPoint).init(allocator);
     var p1: usize = 0;
 
     for (map.items) |row, rowIdx| {
@@ -125,10 +124,10 @@ pub fn main() anyerror!void {
         }
     }
 
-    var basinSizes = std.ArrayList(usize).init(&arena.allocator);
+    var basinSizes = std.ArrayList(usize).init(allocator);
     for (lowPoints.items) |lowPoint| {
         p1 += lowPoint.value + 1;
-        var basin = .{ .fields = std.ArrayList(Point).init(&arena.allocator) };
+        var basin = .{ .fields = std.ArrayList(Point).init(allocator) };
         try basinSizes.append(try exploreBasin(lowPoint.p, &basin, map.items));
     }
 
