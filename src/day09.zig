@@ -25,7 +25,7 @@ const Basin = struct {
     }
 };
 
-pub fn exploreBasin(at: Point, basin: *Basin, map: [][]u8) anyerror!usize {
+pub fn exploreBasin(at: Point, basin: *Basin, map: [][]u8) anyerror!u64 {
     if (basin.contains(at)) {
         return 0;
     }
@@ -34,7 +34,7 @@ pub fn exploreBasin(at: Point, basin: *Basin, map: [][]u8) anyerror!usize {
     }
 
     try basin.fields.append(at);
-    var result: usize = 1;
+    var result: u64 = 1;
 
     // Check where we are so we now which neighbours to look at
     if (at.x < map[0].len - 1) {
@@ -70,8 +70,8 @@ pub fn main() anyerror!void {
         }
         try map.append(row.toOwnedSlice());
     }
-    var lowPoints = std.ArrayList(LowPoint).init(allocator);
-    var p1: usize = 0;
+    var low_points = std.ArrayList(LowPoint).init(allocator);
+    var p_1: u64 = 0;
 
     for (map.items) |row, rowIdx| {
         for (row) |field, colIdx| {
@@ -79,15 +79,15 @@ pub fn main() anyerror!void {
             if (rowIdx == 0) {
                 if (colIdx == 0) {
                     if (field < row[colIdx + 1] and field < map.items[rowIdx + 1][colIdx]) {
-                        try lowPoints.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
+                        try low_points.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
                     }
                 } else if (colIdx == row.len - 1) {
                     if (field < row[colIdx - 1] and field < map.items[rowIdx + 1][colIdx]) {
-                        try lowPoints.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
+                        try low_points.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
                     }
                 } else {
                     if (field < row[colIdx - 1] and field < row[colIdx + 1] and field < map.items[rowIdx + 1][colIdx]) {
-                        try lowPoints.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
+                        try low_points.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
                     }
                 }
 
@@ -95,46 +95,46 @@ pub fn main() anyerror!void {
             } else if (rowIdx == map.items.len - 1) {
                 if (colIdx == 0) {
                     if (field < row[colIdx + 1] and field < map.items[rowIdx - 1][colIdx]) {
-                        try lowPoints.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
+                        try low_points.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
                     }
                 } else if (colIdx == row.len - 1) {
                     if (field < row[colIdx - 1] and field < map.items[rowIdx - 1][colIdx]) {
-                        try lowPoints.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
+                        try low_points.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
                     }
                 } else {
                     if (field < row[colIdx - 1] and field < row[colIdx + 1] and field < map.items[rowIdx - 1][colIdx]) {
-                        try lowPoints.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
+                        try low_points.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
                     }
                 }
                 // Left column
             } else if (colIdx == 0) {
                 if (field < row[colIdx + 1] and field < map.items[rowIdx - 1][colIdx] and field < map.items[rowIdx + 1][colIdx]) {
-                    try lowPoints.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
+                    try low_points.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
                 }
                 // Right column
             } else if (colIdx == map.items.len - 1) {
                 if (field < row[colIdx - 1] and field < map.items[rowIdx - 1][colIdx] and field < map.items[rowIdx + 1][colIdx]) {
-                    try lowPoints.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
+                    try low_points.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
                 }
             } else {
                 if (field < row[colIdx - 1] and field < row[colIdx + 1] and field < map.items[rowIdx - 1][colIdx] and field < map.items[rowIdx + 1][colIdx]) {
-                    try lowPoints.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
+                    try low_points.append(.{ .p = .{ .x = colIdx, .y = rowIdx }, .value = field });
                 }
             }
         }
     }
 
-    var basinSizes = std.ArrayList(usize).init(allocator);
-    for (lowPoints.items) |lowPoint| {
-        p1 += lowPoint.value + 1;
+    var basin_sizes = std.ArrayList(u64).init(allocator);
+    for (low_points.items) |lowPoint| {
+        p_1 += lowPoint.value + 1;
         var basin = .{ .fields = std.ArrayList(Point).init(allocator) };
-        try basinSizes.append(try exploreBasin(lowPoint.p, &basin, map.items));
+        try basin_sizes.append(try exploreBasin(lowPoint.p, &basin, map.items));
     }
 
-    std.sort.sort(usize, basinSizes.items, {}, comptime std.sort.desc(usize));
+    std.sort.sort(u64, basin_sizes.items, {}, comptime std.sort.desc(u64));
 
     const time = timer.read();
-    std.debug.print("Part1: {}\n", .{p1});
-    std.debug.print("Part2: {}\n", .{basinSizes.items[0] * basinSizes.items[1] * basinSizes.items[2]});
+    std.debug.print("Part1: {}\n", .{p_1});
+    std.debug.print("Part2: {}\n", .{basin_sizes.items[0] * basin_sizes.items[1] * basin_sizes.items[2]});
     std.debug.print("Runtime (excluding output): {}us\n", .{time / std.time.ns_per_us});
 }

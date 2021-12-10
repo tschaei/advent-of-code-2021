@@ -4,30 +4,30 @@ const input = @embedFile("day02.input");
 
 pub fn main() anyerror!void {
     var timer = std.time.Timer.start() catch unreachable;
-    var horizontal: usize = 0;
-    var depth_p1: usize = 0;
-    var depth_p2: usize = 0;
-    var aim: usize = 0;
+    var horizontal: u64 = 0;
+    var depth_p_1: u64 = 0;
+    var depth_p_2: u64 = 0;
+    var aim: u64 = 0;
     var lines = std.mem.tokenize(u8, input, "\r\n");
 
     while (lines.next()) |line| {
         var command = std.mem.tokenize(u8, line, " ");
         const direction = command.next() orelse return;
-        const distance = try std.fmt.parseInt(usize, command.next() orelse return, 10);
+        const distance = try std.fmt.parseInt(u64, command.next() orelse return, 10);
         if (std.mem.eql(u8, direction, "forward")) {
             horizontal += distance;
-            depth_p2 += distance * aim;
+            depth_p_2 += distance * aim;
         } else if (std.mem.eql(u8, direction, "up")) {
-            depth_p1 -= distance;
+            depth_p_1 -= distance;
             aim -= distance;
         } else {
-            depth_p1 += distance;
+            depth_p_1 += distance;
             aim += distance;
         }
     }
 
-    const elapsed_time = timer.read();
-    std.debug.print("Part 1: depth: {}, horizontal: {}. Solution: {}\n", .{ depth_p1, horizontal, depth_p1 * horizontal });
-    std.debug.print("Part 2: depth: {}, aim: {}. Solution: {}\n", .{ depth_p2, aim, depth_p2 * horizontal });
-    std.debug.print("Runtime (excluding output): {}us\n", .{elapsed_time / std.time.ns_per_us});
+    const time = timer.read();
+    std.debug.print("Part1: {}\n", .{depth_p_1 * horizontal});
+    std.debug.print("Part2: {}\n", .{depth_p_2 * horizontal});
+    std.debug.print("Runtime (excluding output): {}us\n", .{time / std.time.ns_per_us});
 }

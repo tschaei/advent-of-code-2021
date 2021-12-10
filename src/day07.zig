@@ -4,7 +4,7 @@ const input = @embedFile("day07.input");
 
 pub fn main() anyerror!void {
     const timer = try std.time.Timer.start();
-    var positionsIter = std.mem.split(u8, input, ",");
+    var pos_iter = std.mem.split(u8, input, ",");
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     var allocator = arena.allocator();
     defer arena.deinit();
@@ -12,7 +12,7 @@ pub fn main() anyerror!void {
 
     var current: i64 = std.math.maxInt(i64);
     var end: i64 = 0;
-    while (positionsIter.next()) |pos| {
+    while (pos_iter.next()) |pos| {
         const num = try std.fmt.parseInt(i64, pos, 10);
         try positions.append(num);
         if (num < current) {
@@ -22,27 +22,27 @@ pub fn main() anyerror!void {
         }
     }
 
-    var p1: i64 = std.math.maxInt(i64);
-    var p2: i64 = std.math.maxInt(i64);
+    var p_1: i64 = std.math.maxInt(i64);
+    var p_2: i64 = std.math.maxInt(i64);
     while (current <= end) : (current += 1) {
-        var fuelP1: i64 = 0;
-        var fuelP2: i64 = 0;
+        var fuel_p_1: i64 = 0;
+        var fuel_p_2: i64 = 0;
         for (positions.items) |pos| {
             const delta = try std.math.absInt(std.math.max(pos, current) - std.math.min(pos, current));
-            fuelP1 += delta;
-            fuelP2 += @divFloor(delta * (delta + 1), 2);
+            fuel_p_1 += delta;
+            fuel_p_2 += @divFloor(delta * (delta + 1), 2);
         }
 
-        if (p1 > fuelP1) {
-            p1 = fuelP1;
+        if (p_1 > fuel_p_1) {
+            p_1 = fuel_p_1;
         }
-        if (p2 > fuelP2) {
-            p2 = fuelP2;
+        if (p_2 > fuel_p_2) {
+            p_2 = fuel_p_2;
         }
     }
 
     const time = timer.read();
-    std.debug.print("Part1: {}\n", .{p1});
-    std.debug.print("Part2: {}\n", .{p2});
+    std.debug.print("Part1: {}\n", .{p_1});
+    std.debug.print("Part2: {}\n", .{p_2});
     std.debug.print("Runtime (excluding output): {}us\n", .{time / std.time.ns_per_us});
 }
