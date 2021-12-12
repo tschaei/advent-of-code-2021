@@ -25,7 +25,7 @@ pub fn main() anyerror!void {
     while (lines.next()) |line| {
         var line_iter = std.mem.split(u8, line, " | ");
         var input_line = std.mem.tokenize(u8, line_iter.next() orelse return error.InputParseError, " ");
-        var inputs: [10][]u8 = .{ &.{}, &.{}, &.{}, &.{}, &.{}, &.{}, &.{}, &.{}, &.{}, &.{} };
+        var inputs = [_][]u8{&.{}} ** 10;
         var signal_to_segment = [_]u8{0} ** 7;
         var signal_occurrences = [_]u8{0} ** 7;
         var input_idx: usize = 0;
@@ -94,22 +94,23 @@ pub fn main() anyerror!void {
         }
 
         var output = std.mem.tokenize(u8, line_iter.next() orelse return error.OutputParseError, " ");
-        var decimal_place: usize = 3;
+        var digit_factor: usize = 1000;
         var num: u64 = 0;
-        while (output.next()) |outputDigit| : (decimal_place -= 1) {
+        // last @divFloor will produce 0, but that's after the last iteration so it won't be used
+        while (output.next()) |outputDigit| : (digit_factor = @divFloor(digit_factor, 10)) {
             var digit = try allocator.alloc(u8, outputDigit.len);
             std.mem.copy(u8, digit, outputDigit);
             if (digit.len == 2) {
-                num += 1 * std.math.pow(usize, 10, decimal_place);
+                num += 1 * digit_factor;
                 p_1 += 1;
             } else if (digit.len == 3) {
-                num += 7 * std.math.pow(usize, 10, decimal_place);
+                num += 7 * digit_factor;
                 p_1 += 1;
             } else if (digit.len == 4) {
-                num += 4 * std.math.pow(usize, 10, decimal_place);
+                num += 4 * digit_factor;
                 p_1 += 1;
             } else if (digit.len == 7) {
-                num += 8 * std.math.pow(usize, 10, decimal_place);
+                num += 8 * digit_factor;
                 p_1 += 1;
             } else {
                 for (digit) |*signal| {
@@ -118,15 +119,15 @@ pub fn main() anyerror!void {
                 std.sort.sort(u8, digit, {}, comptime std.sort.asc(u8));
 
                 if (std.mem.eql(u8, digit, "acdeg")) {
-                    num += 2 * std.math.pow(usize, 10, decimal_place);
+                    num += 2 * digit_factor;
                 } else if (std.mem.eql(u8, digit, "acdfg")) {
-                    num += 3 * std.math.pow(usize, 10, decimal_place);
+                    num += 3 * digit_factor;
                 } else if (std.mem.eql(u8, digit, "abdfg")) {
-                    num += 5 * std.math.pow(usize, 10, decimal_place);
+                    num += 5 * digit_factor;
                 } else if (std.mem.eql(u8, digit, "abdefg")) {
-                    num += 6 * std.math.pow(usize, 10, decimal_place);
+                    num += 6 * digit_factor;
                 } else if (std.mem.eql(u8, digit, "abcdfg")) {
-                    num += 9 * std.math.pow(usize, 10, decimal_place);
+                    num += 9 * digit_factor;
                 } // otherwise it's a 0 => ignore
             }
         }
