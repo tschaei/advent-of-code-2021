@@ -12,31 +12,58 @@ const Fold = struct {
     at: usize,
 };
 
-fn foldPaper(paper: *std.ArrayList(*std.ArrayList(bool)), fold: Fold) !void {
+const Dot = struct {
+    x: usize,
+    y: usize,
+};
+
+fn foldPaper(dots: *std.AutoHashMap(Dot, void), fold: Fold) !void {
+    var dots_iter = dots.keyIterator();
     switch (fold.direction) {
         .Left => {
-            for (paper.items) |*row| {
-                for (row.*.items[fold.at..row.*.items.len]) |dot, idx| {
-                    row.*.items[fold.at - idx] = row.*.items[fold.at - idx] or dot;
+            while (dots_iter.next()) |dot| {
+                if (dot.x > fold.at) {
+                    try dots.put(.{
+                        .x = fold.at - (dot.x - fold.at),
+                        .y = dot.y,
+                    }, {});
+                    _ = dots.remove(dot.*);
                 }
-                try row.*.resize(fold.at);
             }
         },
         .Up => {
-            for (paper.items[fold.at..paper.items.len]) |*row, row_idx| {
-                for (row.*.items) |dot, col_idx| {
-                    paper.items[fold.at - row_idx].items[col_idx] = paper.items[fold.at - row_idx].items[col_idx] or dot;
+            while (dots_iter.next()) |dot| {
+                if (dot.y > fold.at) {
+                    try dots.put(.{
+                        .x = dot.x,
+                        .y = fold.at - (dot.y - fold.at),
+                    }, {});
+                    _ = dots.remove(dot.*);
                 }
             }
-            try paper.resize(fold.at);
         },
     }
 }
 
-fn printPaper(paper: *std.ArrayList(*std.ArrayList(bool))) void {
-    for (paper.items) |*row| {
-        for (row.*.items) |dot| {
-            if (dot) {
+fn printPaper(dots: *std.AutoHashMap(Dot, void)) void {
+    var x_max: usize = 0;
+    var y_max: usize = 0;
+    var iter = dots.iterator();
+    while (iter.next()) |entry| {
+        if (entry.key_ptr.*.x > x_max) {
+            x_max = entry.key_ptr.*.x;
+        }
+
+        if (entry.key_ptr.*.y > y_max) {
+            y_max = entry.key_ptr.*.y;
+        }
+    }
+
+    var y: usize = 0;
+    while (y <= y_max) : (y += 1) {
+        var x: usize = 0;
+        while (x <= x_max) : (x += 1) {
+            if (dots.contains(.{ .x = x, .y = y })) {
                 std.debug.print("#", .{});
             } else {
                 std.debug.print(".", .{});
@@ -57,36 +84,18 @@ pub fn main() anyerror!void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var paper = std.ArrayList(*std.ArrayList(bool)).init(allocator);
+    var dots = std.AutoHashMap(Dot, void).init(allocator);
     var folds = std.ArrayList(Fold).init(allocator);
-
-    var x_max: usize = 0;
 
     while (paper_lines.next()) |line| {
         var nums = std.mem.split(u8, line, ",");
         const x = try std.fmt.parseInt(usize, nums.next() orelse return, 10);
         const y = try std.fmt.parseInt(usize, nums.next() orelse return, 10);
 
-        if (x > x_max) {
-            x_max = x;
-        }
-
-        if (y >= paper.items.len) {
-            var idx = paper.items.len;
-            while (idx <= y) : (idx += 1) {
-                var list = try allocator.create(std.ArrayList(bool));
-                list.* = std.ArrayList(bool).init(allocator);
-                try paper.append(list);
-            }
-        }
-
-        for (paper.items) |*row| {
-            while (row.*.items.len < x_max + 1) {
-                try row.*.append(false);
-            }
-        }
-
-        paper.items[y].items[x] = true;
+        try dots.put(.{
+            .x = x,
+            .y = y,
+        }, {});
     }
 
     while (fold_lines.next()) |line| {
@@ -100,23 +109,15 @@ pub fn main() anyerror!void {
         });
     }
 
-    try foldPaper(&paper, folds.items[0]);
-    var p1: u64 = 0;
-
-    for (paper.items) |*row| {
-        for (row.*.items) |dot| {
-            if (dot) {
-                p1 += 1;
-            }
-        }
-    }
+    try foldPaper(&dots, folds.items[0]);
+    var p1 = dots.count();
 
     for (folds.items[1..folds.items.len]) |fold| {
-        try foldPaper(&paper, fold);
+        try foldPaper(&dots, fold);
     }
 
     const time = timer.read();
     std.debug.print("Part1: {}\n", .{p1});
-    printPaper(&paper);
+    printPaper(&dots);
     std.debug.print("Runtime (excluding output): {}us\n", .{time / std.time.ns_per_us});
 }
