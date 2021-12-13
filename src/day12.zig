@@ -12,7 +12,7 @@ fn containsSmallCaveTwice(visited: *std.StringArrayHashMap(u64)) bool {
     return false;
 }
 
-fn findPathsP1(connections: *const std.StringArrayHashMap(*std.ArrayList([]const u8)), current: []const u8, visited: *std.StringArrayHashMap(void)) anyerror!u64 {
+fn findPathsP1(connections: *const std.StringArrayHashMap(std.ArrayList([]const u8)), current: []const u8, visited: *std.StringArrayHashMap(void)) anyerror!u64 {
     if (std.mem.eql(u8, current, "end")) {
         return 1;
     }
@@ -34,7 +34,7 @@ fn findPathsP1(connections: *const std.StringArrayHashMap(*std.ArrayList([]const
     return paths;
 }
 
-fn findPathsP2(connections: *const std.StringArrayHashMap(*std.ArrayList([]const u8)), current: []const u8, visited: *std.StringArrayHashMap(u64)) anyerror!u64 {
+fn findPathsP2(connections: *const std.StringArrayHashMap(std.ArrayList([]const u8)), current: []const u8, visited: *std.StringArrayHashMap(u64)) anyerror!u64 {
     if (std.mem.eql(u8, current, "end")) {
         return 1;
     }
@@ -77,28 +77,26 @@ pub fn main() anyerror!void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    var connections = std.StringArrayHashMap(*std.ArrayList([]const u8)).init(allocator);
+    var connections = std.StringArrayHashMap(std.ArrayList([]const u8)).init(allocator);
 
     while (lines.next()) |line| {
         var caves = std.mem.split(u8, line, "-");
         const from = caves.next() orelse return error.ConnectionParseError;
         const to = caves.next() orelse return error.ConnectionParseError;
         if (connections.contains(from)) {
-            try (connections.get(from) orelse unreachable).append(to);
+            try (connections.getPtr(from) orelse unreachable).append(to);
         } else {
-            var connected_caves = try allocator.create(std.ArrayList([]const u8));
-            connected_caves.* = std.ArrayList([]const u8).init(allocator);
+            var connected_caves = std.ArrayList([]const u8).init(allocator);
             try connections.put(from, connected_caves);
-            try (connections.get(from) orelse unreachable).append(to);
+            try (connections.getPtr(from) orelse unreachable).append(to);
         }
 
         if (connections.contains(to)) {
-            try (connections.get(to) orelse unreachable).append(from);
+            try (connections.getPtr(to) orelse unreachable).append(from);
         } else {
-            var connected_caves = try allocator.create(std.ArrayList([]const u8));
-            connected_caves.* = std.ArrayList([]const u8).init(allocator);
+            var connected_caves = std.ArrayList([]const u8).init(allocator);
             try connections.put(to, connected_caves);
-            try (connections.get(to) orelse unreachable).append(from);
+            try (connections.getPtr(to) orelse unreachable).append(from);
         }
     }
 
