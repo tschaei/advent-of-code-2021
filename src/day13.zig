@@ -18,7 +18,8 @@ const Dot = struct {
 };
 
 fn foldPaper(dots: *std.AutoHashMap(Dot, void), fold: Fold) !void {
-    var dots_iter = dots.keyIterator();
+    var dots_clone = try dots.clone();
+    var dots_iter = dots_clone.keyIterator();
     switch (fold.direction) {
         .Left => {
             while (dots_iter.next()) |dot| {
