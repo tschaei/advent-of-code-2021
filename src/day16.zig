@@ -11,10 +11,10 @@ const ParseResult = struct {
 const BitCountChildIterator = struct {
     bit_count: usize,
     current: usize,
-    buf: []const u8,
+    buf: *[]const u8,
     allocator: std.mem.Allocator,
 
-    pub fn init(allocator: std.mem.Allocator, buf: []const u8, bit_count: usize) BitCountChildIterator {
+    pub fn init(allocator: std.mem.Allocator, buf: *[]const u8, bit_count: usize) BitCountChildIterator {
         return .{
             .bit_count = bit_count,
             .current = 0,
@@ -28,9 +28,9 @@ const BitCountChildIterator = struct {
             return null;
         }
 
-        const result = try parsePacket(self.allocator, self.buf);
+        const result = try parsePacket(self.allocator, self.buf.*);
         self.current += self.buf.len - result.remaining_input.len;
-        self.buf = result.remaining_input;
+        self.buf.* = result.remaining_input;
         return result;
     }
 };
@@ -38,10 +38,10 @@ const BitCountChildIterator = struct {
 const PacketCountChildIterator = struct {
     packets_to_parse: usize,
     count: usize,
-    buf: []const u8,
+    buf: *[]const u8,
     allocator: std.mem.Allocator,
 
-    pub fn init(allocator: std.mem.Allocator, buf: []const u8, packets_to_parse: usize) PacketCountChildIterator {
+    pub fn init(allocator: std.mem.Allocator, buf: *[]const u8, packets_to_parse: usize) PacketCountChildIterator {
         return .{
             .packets_to_parse = packets_to_parse,
             .count = 0,
@@ -55,9 +55,9 @@ const PacketCountChildIterator = struct {
             return null;
         }
 
-        const result = try parsePacket(self.allocator, self.buf);
+        const result = try parsePacket(self.allocator, self.buf.*);
         self.count += 1;
-        self.buf = result.remaining_input;
+        self.buf.* = result.remaining_input;
         return result;
     }
 };
@@ -111,15 +111,19 @@ fn parseOperator(comptime T: type, iter: *T, packet_version: u8, packet_type_id:
     };
 }
 
+inline fn consume(comptime T: type, bits: *[]const u8, count: usize) !T {
+    const result = try std.fmt.parseInt(T, bits.*[0..count], 2);
+    bits.* = bits.*[count..];
+    return result;
+}
+
 fn parsePacket(allocator: std.mem.Allocator, input_bits: []const u8) anyerror!ParseResult {
     var packet = input_bits;
     var literal_buffer = std.ArrayList(u64).init(allocator);
     defer literal_buffer.deinit();
     // 1. read packet version
-    const packet_version = try std.fmt.parseInt(u8, packet[0..3], 2);
-    packet = packet[3..];
-    const packet_type_id = try std.fmt.parseInt(u8, packet[0..3], 2);
-    packet = packet[3..];
+    const packet_version = try consume(u8, &packet, 3);
+    const packet_type_id = try consume(u8, &packet, 3);
     switch (packet_type_id) {
         4 => {
             // literal value
@@ -130,8 +134,7 @@ fn parsePacket(allocator: std.mem.Allocator, input_bits: []const u8) anyerror!Pa
                 if (packet[0] == '0') {
                     literal_done = true;
                 }
-                try literal_buffer.append(try std.fmt.parseInt(u8, packet[1..5], 2));
-                packet = packet[5..];
+                try literal_buffer.append((try consume(u8, &packet, 5)) & 0b1111);
             }
 
             for (literal_buffer.items) |nibble, idx| {
@@ -146,19 +149,17 @@ fn parsePacket(allocator: std.mem.Allocator, input_bits: []const u8) anyerror!Pa
         },
         else => {
             // operator packets
-            switch (packet[0]) {
-                '0' => {
+            switch (try consume(u8, &packet, 1)) {
+                0 => {
                     // next 15 bits are number that represents total length in bits of sub-packets
-                    const bits_to_parse = try std.fmt.parseInt(u16, packet[1..16], 2);
-                    packet = packet[16..];
-                    var iter = BitCountChildIterator.init(allocator, packet, bits_to_parse);
+                    const bits_to_parse = (try consume(u16, &packet, 15)) & 0b111111111111111;
+                    var iter = BitCountChildIterator.init(allocator, &packet, bits_to_parse);
                     return parseOperator(BitCountChildIterator, &iter, packet_version, packet_type_id);
                 },
-                '1' => {
+                1 => {
                     // next 11 bits are number that represents number of sub-packets immediately contained by this packet
-                    const packets_to_parse = try std.fmt.parseInt(u16, packet[1..12], 2);
-                    packet = packet[12..];
-                    var iter = PacketCountChildIterator.init(allocator, packet, packets_to_parse);
+                    const packets_to_parse = (try consume(u16, &packet, 11)) & 0b11111111111;
+                    var iter = PacketCountChildIterator.init(allocator, &packet, packets_to_parse);
                     return parseOperator(PacketCountChildIterator, &iter, packet_version, packet_type_id);
                 },
                 else => unreachable,
