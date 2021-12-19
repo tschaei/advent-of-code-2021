@@ -23,6 +23,7 @@ pub fn build(b: *std.build.Builder) !void {
     try makeBuildForDay(allocator, b, target, mode, "15");
     try makeBuildForDay(allocator, b, target, mode, "16");
     try makeBuildForDay(allocator, b, target, mode, "17");
+    try makeBuildForDay(allocator, b, target, mode, "18");
 }
 
 pub fn makeBuildForDay(allocator: std.mem.Allocator, b: *std.build.Builder, target: std.zig.CrossTarget, mode: std.builtin.Mode, day: []const u8) !void {
