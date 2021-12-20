@@ -73,7 +73,7 @@ pub fn main() anyerror!void {
     const allocator = arena.allocator();
     defer arena.deinit();
     var lines = std.mem.split(u8, input, "\n");
-    var draws = std.mem.tokenize(u8, lines.next() orelse return, ",");
+    var draws = std.mem.tokenize(u8, lines.next().?, ",");
     var boards = try parseBoards(allocator, &lines);
     var next_boards = try std.ArrayList(Board).initCapacity(allocator, boards.items.len);
 

@@ -38,14 +38,14 @@ pub fn main() anyerror!void {
     const timer = try std.time.Timer.start();
     const in_bytes = @embedFile("day17.input");
     var xy_inputs = std.mem.split(u8, in_bytes, ", ");
-    var x_input = std.mem.split(u8, xy_inputs.next() orelse unreachable, "=");
+    var x_input = std.mem.split(u8, xy_inputs.next().?, "=");
     _ = x_input.next();
-    var x_range = std.mem.split(u8, x_input.next() orelse unreachable, "..");
-    const x_values = [_]i64{ try std.fmt.parseInt(i64, x_range.next() orelse unreachable, 10), try std.fmt.parseInt(i64, x_range.next() orelse unreachable, 10) };
-    var y_input = std.mem.split(u8, xy_inputs.next() orelse unreachable, "=");
+    var x_range = std.mem.split(u8, x_input.next().?, "..");
+    const x_values = [_]i64{ try std.fmt.parseInt(i64, x_range.next().?, 10), try std.fmt.parseInt(i64, x_range.next().?, 10) };
+    var y_input = std.mem.split(u8, xy_inputs.next().?, "=");
     _ = y_input.next();
-    var y_range = std.mem.split(u8, y_input.next() orelse unreachable, "..");
-    const y_values = [_]i64{ try std.fmt.parseInt(i64, y_range.next() orelse unreachable, 10), try std.fmt.parseInt(i64, y_range.next() orelse unreachable, 10) };
+    var y_range = std.mem.split(u8, y_input.next().?, "..");
+    const y_values = [_]i64{ try std.fmt.parseInt(i64, y_range.next().?, 10), try std.fmt.parseInt(i64, y_range.next().?, 10) };
     const target_area = TargetArea{
         .left = std.math.min(x_values[0], x_values[1]),
         .right = std.math.max(x_values[0], x_values[1]),
@@ -56,9 +56,10 @@ pub fn main() anyerror!void {
     var max_y: i64 = 0;
     var valid_initial_velocities: u64 = 0;
     var vel_x: i64 = 0;
-    while (vel_x <= 200) : (vel_x += 1) {
-        var vel_y: i64 = -200;
-        while (vel_y <= 200) : (vel_y += 1) {
+    while (vel_x <= target_area.right) : (vel_x += 1) {
+        var vel_y: i64 = target_area.bottom;
+        const vel_y_max = std.math.max(sign(target_area.bottom) * target_area.bottom, sign(target_area.top) * target_area.top);
+        while (vel_y <= vel_y_max * vel_y_max) : (vel_y += 1) {
             var probe = Probe{
                 .p = .{ .x = 0, .y = 0 },
                 .vel = .{ .x = vel_x, .y = vel_y },

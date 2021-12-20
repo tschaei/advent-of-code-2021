@@ -23,7 +23,7 @@ fn findPathsP1(connections: *const std.StringArrayHashMap(std.ArrayList([]const 
 
     try visited.put(current, {});
     var paths: usize = 0;
-    for ((connections.get(current) orelse unreachable).items) |next| {
+    for (connections.get(current).?.items) |next| {
         const big_cave = next[0] <= 'Z';
         if (big_cave or !visited.contains(next)) {
             var visited_new = try visited.clone();
@@ -50,12 +50,12 @@ fn findPathsP2(connections: *const std.StringArrayHashMap(std.ArrayList([]const 
     if (visited.contains(current)) {
         const big_cave = current[0] <= 'Z';
         if (big_cave) {
-            try visited.put(current, (visited.get(current) orelse unreachable) + 1);
+            try visited.put(current, visited.get(current).? + 1);
         } else {
-            if (visited.get(current) orelse unreachable == 2 or containsSmallCaveTwice(visited)) {
+            if (visited.get(current).? == 2 or containsSmallCaveTwice(visited)) {
                 return 0;
             } else {
-                try visited.put(current, (visited.get(current) orelse unreachable) + 1);
+                try visited.put(current, visited.get(current).? + 1);
             }
         }
     } else {
@@ -63,7 +63,7 @@ fn findPathsP2(connections: *const std.StringArrayHashMap(std.ArrayList([]const 
     }
 
     var paths: usize = 0;
-    for ((connections.get(current) orelse unreachable).items) |next| {
+    for (connections.get(current).?.items) |next| {
         var visited_new = try visited.clone();
         paths += try findPathsP2(connections, next, &visited_new);
     }
@@ -81,22 +81,22 @@ pub fn main() anyerror!void {
 
     while (lines.next()) |line| {
         var caves = std.mem.split(u8, line, "-");
-        const from = caves.next() orelse return error.ConnectionParseError;
-        const to = caves.next() orelse return error.ConnectionParseError;
+        const from = caves.next().?;
+        const to = caves.next().?;
         if (connections.contains(from)) {
-            try (connections.getPtr(from) orelse unreachable).append(to);
+            try connections.getPtr(from).?.append(to);
         } else {
             var connected_caves = std.ArrayList([]const u8).init(allocator);
             try connections.put(from, connected_caves);
-            try (connections.getPtr(from) orelse unreachable).append(to);
+            try connections.getPtr(from).?.append(to);
         }
 
         if (connections.contains(to)) {
-            try (connections.getPtr(to) orelse unreachable).append(from);
+            try connections.getPtr(to).?.append(from);
         } else {
             var connected_caves = std.ArrayList([]const u8).init(allocator);
             try connections.put(to, connected_caves);
-            try (connections.getPtr(to) orelse unreachable).append(from);
+            try connections.getPtr(to).?.append(from);
         }
     }
 

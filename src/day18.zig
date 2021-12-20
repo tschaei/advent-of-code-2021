@@ -10,7 +10,7 @@ const ElementTag = enum {
 const Element = union(ElementTag) {
     number: *Number,
     pair: *Pair,
-    
+
     pub fn setLeft(self: *Element, child: *Element) !void {
         if (self.* == .pair) {
             self.pair.left = child;
@@ -73,7 +73,7 @@ fn parseNumber(allocator: std.mem.Allocator, buf: []const u8, parent: ?*Element)
         }
     } else if (buf[0] != ']') {
         var number = try allocator.create(Number);
-        number.* = .{ .v = try std.fmt.parseInt(u8, &.{buf[0]}, 10), .parent = (parent orelse unreachable) };
+        number.* = .{ .v = try std.fmt.parseInt(u8, &.{buf[0]}, 10), .parent = parent.? };
         result.e = try allocator.create(Element);
         result.e.* = .{ .number = number };
         result.remaining_input = buf[2..];
@@ -189,16 +189,16 @@ fn assertCorrectParents(e: *Element) void {
                 .pair => {
                     std.debug.assert(e.pair.left.pair.parent.? == e);
                     assertCorrectParents(e.pair.left);
-                }
+                },
             }
             switch (e.pair.right.*) {
                 .number => std.debug.assert(e.pair.right.number.parent == e),
                 .pair => {
                     std.debug.assert(e.pair.right.pair.parent.? == e);
                     assertCorrectParents(e.pair.right);
-                }
+                },
             }
-        }
+        },
     }
 }
 
@@ -239,12 +239,12 @@ fn addPairs(allocator: std.mem.Allocator, p_1: *Element, p_2: *Element) !*Elemen
             var left_element = try allocator.create(Element);
             var left = try allocator.create(Number);
             left_element.* = .{ .number = left };
-            left.* = .{.parent = n, .v = try std.math.divFloor(u8, v, 2)};
+            left.* = .{ .parent = n, .v = try std.math.divFloor(u8, v, 2) };
             try n.setLeft(left_element);
             var right_element = try allocator.create(Element);
             var right = try allocator.create(Number);
             right_element.* = .{ .number = right };
-            right.* = .{.parent = n, .v = try std.math.divCeil(u8, v, 2)};
+            right.* = .{ .parent = n, .v = try std.math.divCeil(u8, v, 2) };
             try n.setRight(right_element);
         }
     }
@@ -272,7 +272,7 @@ fn cloneElement(allocator: std.mem.Allocator, e: *Element, parent: ?*Element) an
             var pair = try allocator.create(Pair);
             pair.* = .{ .parent = parent, .left = try cloneElement(allocator, e.pair.left, result), .right = try cloneElement(allocator, e.pair.right, result) };
             result.* = .{ .pair = pair };
-        }
+        },
     }
 
     return result;

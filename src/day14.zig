@@ -5,8 +5,8 @@ const input = @embedFile("day14.input");
 pub fn main() anyerror!void {
     const timer = try std.time.Timer.start();
     var blocks = std.mem.split(u8, input, "\n\n");
-    const template = blocks.next() orelse return error.InputBlockParsing;
-    var lines = std.mem.tokenize(u8, blocks.next() orelse return error.InputBlockParsing, "\r\n");
+    const template = blocks.next().?;
+    var lines = std.mem.tokenize(u8, blocks.next().?, "\r\n");
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
@@ -17,8 +17,8 @@ pub fn main() anyerror!void {
 
     while (lines.next()) |line| {
         var parts = std.mem.split(u8, line, " -> ");
-        const pair = parts.next() orelse return error.RuleParsing;
-        const new_element = (parts.next() orelse return error.RuleParsing)[0];
+        const pair = parts.next().?;
+        const new_element = (parts.next().?)[0];
         try rules.put(pair, new_element);
         try pair_counts.put(pair, 0);
     }
@@ -37,17 +37,17 @@ pub fn main() anyerror!void {
     while (step < 40) : (step += 1) {
         var iter = pair_counts.iterator();
         while (iter.next()) |entry| {
-            const new_element = rules.get(entry.key_ptr.*) orelse return;
+            const new_element = rules.get(entry.key_ptr.*).?;
             try element_counts.put(new_element, (element_counts.get(new_element) orelse 0) + entry.value_ptr.*);
             const new_pair_left = [_]u8{ entry.key_ptr.*[0], new_element };
             const new_pair_right = [_]u8{ new_element, entry.key_ptr.*[1] };
-            try new_counts.put(&new_pair_left, (new_counts.get(&new_pair_left) orelse unreachable) + entry.value_ptr.*);
-            try new_counts.put(&new_pair_right, (new_counts.get(&new_pair_right) orelse unreachable) + entry.value_ptr.*);
+            try new_counts.put(&new_pair_left, new_counts.get(&new_pair_left).? + entry.value_ptr.*);
+            try new_counts.put(&new_pair_right, new_counts.get(&new_pair_right).? + entry.value_ptr.*);
         }
 
         iter.reset();
         while (iter.next()) |entry| {
-            try pair_counts.put(entry.key_ptr.*, new_counts.get(entry.key_ptr.*) orelse unreachable);
+            try pair_counts.put(entry.key_ptr.*, new_counts.get(entry.key_ptr.*).?);
             try new_counts.put(entry.key_ptr.*, 0);
         }
 

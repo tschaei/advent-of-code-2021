@@ -24,7 +24,7 @@ pub fn main() anyerror!void {
 
     while (lines.next()) |line| {
         var line_iter = std.mem.split(u8, line, " | ");
-        var input_line = std.mem.tokenize(u8, line_iter.next() orelse return error.InputParseError, " ");
+        var input_line = std.mem.tokenize(u8, line_iter.next().?, " ");
         var inputs = [_][]u8{&.{}} ** 10;
         var signal_to_segment = [_]u8{0} ** 7;
         var signal_occurrences = [_]u8{0} ** 7;
@@ -93,7 +93,7 @@ pub fn main() anyerror!void {
             }
         }
 
-        var output = std.mem.tokenize(u8, line_iter.next() orelse return error.OutputParseError, " ");
+        var output = std.mem.tokenize(u8, line_iter.next().?, " ");
         var digit_factor: usize = 1000;
         var num: u64 = 0;
         // last @divFloor will produce 0, but that's after the last iteration so it won't be used

@@ -8,7 +8,7 @@ pub fn main() anyerror!void {
     const allocator = arena.allocator();
     defer arena.deinit();
     var lines = std.mem.tokenize(u8, input, "\r\n");
-    var bits = (lines.next() orelse return).len;
+    var bits = lines.next().?.len;
     lines.reset();
     var line_count: u64 = 0;
     var one_counts = try allocator.alloc(u64, bits);

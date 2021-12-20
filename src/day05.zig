@@ -62,13 +62,13 @@ pub fn parseLineSegments(allocator: std.mem.Allocator, buf: []const u8) !ParsedL
     var y_max: usize = 0;
     while (lines.next()) |line| {
         var points = std.mem.split(u8, line, " -> ");
-        var point1 = std.mem.tokenize(u8, points.next() orelse return error.ParseError, ",");
-        var point2 = std.mem.tokenize(u8, points.next() orelse return error.ParseError, ",");
+        var point1 = std.mem.tokenize(u8, points.next().?, ",");
+        var point2 = std.mem.tokenize(u8, points.next().?, ",");
         const segment = .{
-            .x_1 = try std.fmt.parseInt(usize, point1.next() orelse return error.ParseError, 10),
-            .y_1 = try std.fmt.parseInt(usize, point1.next() orelse return error.ParseError, 10),
-            .x_2 = try std.fmt.parseInt(usize, point2.next() orelse return error.ParseError, 10),
-            .y_2 = try std.fmt.parseInt(usize, point2.next() orelse return error.ParseError, 10),
+            .x_1 = try std.fmt.parseInt(usize, point1.next().?, 10),
+            .y_1 = try std.fmt.parseInt(usize, point1.next().?, 10),
+            .x_2 = try std.fmt.parseInt(usize, point2.next().?, 10),
+            .y_2 = try std.fmt.parseInt(usize, point2.next().?, 10),
         };
         try segments.append(segment);
         x_max = std.math.max(x_max, std.math.max(segment.x_1, segment.x_2));

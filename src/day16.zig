@@ -92,8 +92,8 @@ fn parseOperator(comptime T: type, iter: *T, packet_version: u8, packet_type_id:
             remaining_input = result.remaining_input;
         }
     } else {
-        const resultA = (try iter.next()) orelse return error.ParseError;
-        const resultB = (try iter.next()) orelse return error.ParseError;
+        const resultA = (try iter.next()).?;
+        const resultB = (try iter.next()).?;
         switch (packet_type_id) {
             5 => value = if (resultA.value > resultB.value) 1 else 0,
             6 => value = if (resultA.value < resultB.value) 1 else 0,

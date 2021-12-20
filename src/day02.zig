@@ -12,8 +12,8 @@ pub fn main() anyerror!void {
 
     while (lines.next()) |line| {
         var command = std.mem.tokenize(u8, line, " ");
-        const direction = command.next() orelse return;
-        const distance = try std.fmt.parseInt(u64, command.next() orelse return, 10);
+        const direction = command.next().?;
+        const distance = try std.fmt.parseInt(u64, command.next().?, 10);
         if (std.mem.eql(u8, direction, "forward")) {
             horizontal += distance;
             depth_p_2 += distance * aim;

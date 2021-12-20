@@ -78,9 +78,9 @@ fn printPaper(dots: *std.AutoHashMap(Dot, void)) void {
 pub fn main() anyerror!void {
     const timer = try std.time.Timer.start();
     var input_blocks = std.mem.split(u8, input, "\n\n");
-    const paper_bytes = input_blocks.next() orelse return;
+    const paper_bytes = input_blocks.next().?;
     var paper_lines = std.mem.tokenize(u8, paper_bytes, "\r\n");
-    const fold_bytes = input_blocks.next() orelse return;
+    const fold_bytes = input_blocks.next().?;
     var fold_lines = std.mem.tokenize(u8, fold_bytes, "\r\n");
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
@@ -90,8 +90,8 @@ pub fn main() anyerror!void {
 
     while (paper_lines.next()) |line| {
         var nums = std.mem.split(u8, line, ",");
-        const x = try std.fmt.parseInt(usize, nums.next() orelse return, 10);
-        const y = try std.fmt.parseInt(usize, nums.next() orelse return, 10);
+        const x = try std.fmt.parseInt(usize, nums.next().?, 10);
+        const y = try std.fmt.parseInt(usize, nums.next().?, 10);
 
         try dots.put(.{
             .x = x,
@@ -101,8 +101,8 @@ pub fn main() anyerror!void {
 
     while (fold_lines.next()) |line| {
         var split = std.mem.split(u8, line, "=");
-        const direction = split.next() orelse return;
-        const at = try std.fmt.parseInt(usize, split.next() orelse return, 10);
+        const direction = split.next().?;
+        const at = try std.fmt.parseInt(usize, split.next().?, 10);
 
         try folds.append(.{
             .direction = if (direction[direction.len - 1] == 'y') .Up else .Left,
